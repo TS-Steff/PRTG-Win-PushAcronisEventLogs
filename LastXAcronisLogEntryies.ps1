@@ -50,9 +50,7 @@ function sendPush(){
        -ContentType "text/xml" `
        -Body $prtgresult `
        -usebasicparsing
-
-       #-Body ("content="+[System.Web.HttpUtility]::UrlEncode.($prtgresult)) `
-    #http://prtg.ts-man.ch:5055/637D334C-DCD5-49E3-94CA-CE12ABB184C3?content=<prtg><result><channel>MyChannel</channel><value>10</value></result><text>this%20is%20a%20message</text></prtg>   
+  
     if ($answer.statuscode -ne 200) {
        write-warning "Request to PRTG failed"
        write-host "answer: " $answer.statuscode
@@ -114,7 +112,7 @@ for($i=0; $i -ne $events.Count; $i++){
     }
 }
 
-
+<#
 write-host "Success: " $eventsSuccess
 write-host "Abort: " $eventsAbort
 write-host "Error: " $eventsError
@@ -123,7 +121,7 @@ write-host "Unknown: " $eventsUnknown
 #write-host $eventsWarnDates
 write-host $eventsErrDates
 write-host $eventsAbortDates
-
+#>
 
 $prtgText = ""
 if($eventsError -ne 0){$prtgText += $eventsErrDates}
@@ -159,7 +157,7 @@ $prtgresult += @"
         <value>$eventsError</value>
         <showChart>1</showChart>
         <showTable>1</showTable>
-        <LimitMaxError>1</LimitMaxError>
+        <LimitMaxError>0,5</LimitMaxError>
         <LimitErrorMsg>$eventsError errors in the last $numLastEvents events</LimitErrorMsg>
         <LimitMode>1</LimitMode>
     </result>
@@ -169,7 +167,7 @@ $prtgresult += @"
         <value>$eventsUnknown</value>
         <showChart>1</showChart>
         <showTable>1</showTable>
-        <LimitMaxError>1</LimitMaxError>
+        <LimitMaxError>0,5</LimitMaxError>
         <LimitErrorMsg>$eventsUnknown unknown events in the last $numLastEvents events</LimitErrorMsg>
         <LimitMode>1</LimitMode>
     </result>
