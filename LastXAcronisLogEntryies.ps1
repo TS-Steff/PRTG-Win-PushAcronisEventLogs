@@ -73,7 +73,13 @@ function sendPush(){
  # 4 - Informational
  # 5 - Verbose
  ####>
+$lastEvent = Get-WinEvent -ProviderName $eventSource -MaxEvents 1
+
 $events = Get-WinEvent -ProviderName $eventSource -MaxEvents $numLastEvents
+#write-host "length: " $events.Count
+
+$eventsCount = $events.Count-1 
+
 
 #$eventsWarn = 0
 $eventsSuccess = 0
@@ -86,8 +92,27 @@ $eventsErrDates = "Errors: "
 $eventsAbortDates = "Aborts: "
 
 
+
+#### Last Backup State ####
+$lastEvent = [xml]$lastEvent[0].ToXml()
+$lastEventDataLine = $lastEvent.Event.EventData.Data.Split([Environment]::NewLine)
+$lastEventCode = $lastEventDataLine[0].Split(":")[2].Trim() #2 is the error code
+
+switch ($lastEventCode){
+    12      { $lastEventState = 0 } # OK
+    14      { $lastEventState = 1 } # Error
+    29      { $lastEventState = 2 } # Abort
+    Default { $lastEventState = 9 } # Unknown
+}
+
+
+
 for($i=0; $i -ne $events.Count; $i++){
+    #write-host "i: " $i
     $event = [xml]$events[$i].ToXml()
+    #write-host "Level: " $event.Event.System.Level
+    #write-host "Data: " $event.Event.EventData.Data
+    #write-host " "
 
     <####
      # 1 - Ereignis mit : am schluss
@@ -96,6 +121,8 @@ for($i=0; $i -ne $events.Count; $i++){
     $eventDataLine = $event.Event.EventData.Data.Split([Environment]::NewLine)
 
     $eventDataErrorCode = $eventDataLine[0].Split(":")[2].Trim() #2 is the error code
+
+    #write-host "'$eventDataErrorCode'"
 
     switch ($eventDataErrorCode){
         12      { $eventsSuccess++  }
@@ -112,20 +139,15 @@ for($i=0; $i -ne $events.Count; $i++){
     }
 }
 
-<#
-write-host "Success: " $eventsSuccess
-write-host "Abort: " $eventsAbort
-write-host "Error: " $eventsError
-write-host "Unknown: " $eventsUnknown
 
-#write-host $eventsWarnDates
-write-host $eventsErrDates
-write-host $eventsAbortDates
-#>
+
+
+
 
 $prtgText = ""
 if($eventsError -ne 0){$prtgText += $eventsErrDates}
 if($eventsAbort -ne 0){$prtgText += $eventsAbortDates}
+#write-host $prtgText
 
 
 ####
@@ -157,7 +179,9 @@ $prtgresult += @"
         <value>$eventsError</value>
         <showChart>1</showChart>
         <showTable>1</showTable>
-        <LimitMaxError>0,5</LimitMaxError>
+        <LimitMaxWarning>0</LimitMaxWarning>
+        <LimitWarningMsg>$eventsError warnings in the Last $numLastEvents events</LimitWarningMsg>
+        <LimitMaxError>3</LimitMaxError>
         <LimitErrorMsg>$eventsError errors in the last $numLastEvents events</LimitErrorMsg>
         <LimitMode>1</LimitMode>
     </result>
@@ -167,9 +191,17 @@ $prtgresult += @"
         <value>$eventsUnknown</value>
         <showChart>1</showChart>
         <showTable>1</showTable>
-        <LimitMaxError>0,5</LimitMaxError>
+        <LimitMaxError>1</LimitMaxError>
         <LimitErrorMsg>$eventsUnknown unknown events in the last $numLastEvents events</LimitErrorMsg>
         <LimitMode>1</LimitMode>
+    </result>
+    <result>
+        <channel>Last State</channel>
+        <unit>custom</unit>
+        <value>$lastEventState</value>
+        <valueLookup>ts.acronis.push</valueLookup>
+        <showChart>1</showChart>
+        <showTable>1</showTable>
     </result>
     <text>Last $numLastEvents events // $prtgText</text>
 </prtg>
@@ -179,5 +211,4 @@ $prtgresult += @"
 
 #write-host $prtgresult
 
-sendPush
-
+SendPush

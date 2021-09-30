@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValueLookup id="ts.acronis.push" desiredValue="1" undefinedState="Error">
+  <Lookups>
+    <SingleInt state="Ok" value="0">OK</SingleInt>
+    <SingleInt state="Error" value="1">Failed</SingleInt>
+    <SingleInt state="Warning" value="2">Abort</SingleInt>
+    <SingleInt state="Error" value="9">Unknown</SingleInt>
+  </Lookups>
+</ValueLookup>
