@@ -16,7 +16,7 @@
 ####
 # CONFIG START
 ####
-$probeIP = "PROBE"
+$probeIP = "PROBE" #include https or http
 $sensorPort = "PORT"
 $sensorKey ="KEY"
 
@@ -46,7 +46,7 @@ function sendPush(){
     #$Answer = Invoke-WebRequest -Uri $NETXNUA -Method Post -Body $RequestBody -ContentType $ContentType -UseBasicParsing
     $answer = Invoke-WebRequest `
        -method POST `
-       -URI ("http://" + $probeIP + ":" + $sensorPort + "/" + $sensorKey) `
+       -URI ($probeIP + ":" + $sensorPort + "/" + $sensorKey) `
        -ContentType "text/xml" `
        -Body $prtgresult `
        -usebasicparsing
